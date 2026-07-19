@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "cambusascout",
-        "width": 800,
-        "height": 600
+        "title": "Cambusa Scout",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1280,
+        "minHeight": 800
       }
     ],
     "security": {

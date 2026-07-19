@@ -1,51 +1,39 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import Layout from "./layout/Layout";
+import { CampoProvider } from "./context/CampoContext";
+import { SaveFeedbackProvider } from "./context/SaveFeedbackContext";
+import IngredientiPage from "./pages/IngredientiPage";
+import RicettePage from "./pages/RicettePage";
+import CampoPage from "./pages/CampoPage";
+import MenuPage from "./pages/MenuPage";
+import GrammaturePage from "./pages/GrammaturePage";
+import ListaSpesaPage from "./pages/ListaSpesaPage";
+import MagazzinoPage from "./pages/MagazzinoPage";
+import AcquistiVariPage from "./pages/AcquistiVariPage";
+import BackupPage from "./pages/BackupPage";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
+export default function App() {
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <SaveFeedbackProvider>
+      <CampoProvider>
+        <HashRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route index element={<Navigate to="/ricette" replace />} />
+              <Route path="/ricette" element={<RicettePage />} />
+              <Route path="/ingredienti" element={<IngredientiPage />} />
+              <Route path="/menu" element={<MenuPage />} />
+              <Route path="/campo" element={<CampoPage />} />
+              <Route path="/grammature" element={<GrammaturePage />} />
+              <Route path="/lista-spesa" element={<ListaSpesaPage />} />
+              <Route path="/magazzino" element={<MagazzinoPage />} />
+              <Route path="/acquisti-vari" element={<AcquistiVariPage />} />
+              <Route path="/backup" element={<BackupPage />} />
+            </Route>
+          </Routes>
+        </HashRouter>
+      </CampoProvider>
+    </SaveFeedbackProvider>
   );
 }
-
-export default App;
