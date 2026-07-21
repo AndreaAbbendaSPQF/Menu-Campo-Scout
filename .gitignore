@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Backup dati esportati dall'app (dati utente, non codice)
+Backup_*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

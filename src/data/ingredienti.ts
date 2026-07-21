@@ -89,6 +89,21 @@ export async function usoIngrediente(id: number): Promise<UsoIngrediente> {
   };
 }
 
+export interface RicettaCoinvolta {
+  id: number;
+  nome: string;
+}
+
+export async function listRicetteCoinvolte(ingredienteId: number): Promise<RicettaCoinvolta[]> {
+  return select<RicettaCoinvolta>(
+    `SELECT DISTINCT r.id, r.nome FROM ricetta_ingredienti ri
+     JOIN ricette r ON r.id = ri.ricetta_id
+     WHERE ri.ingrediente_id = ?
+     ORDER BY r.nome COLLATE NOCASE`,
+    [ingredienteId]
+  );
+}
+
 export async function eliminaIngrediente(id: number): Promise<void> {
   const uso = await usoIngrediente(id);
   const totale = uso.ricette + uso.magazzino + uso.serate + uso.acquisti;

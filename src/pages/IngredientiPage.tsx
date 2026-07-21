@@ -9,6 +9,7 @@ import {
 import { listCategorie } from "../data/categorie";
 import { normalizeForCompare } from "../lib/text";
 import { useSaveFeedback } from "../context/SaveFeedbackContext";
+import RicetteCoinvolteButton from "../components/RicetteCoinvolteButton";
 import { CategoriaMerceologica, Ingrediente, UNITA_MISURA, UnitaMisura } from "../types/domain";
 
 interface FormState {
@@ -125,6 +126,7 @@ export default function IngredientiPage() {
                 <th>Categoria</th>
                 <th>Gelo</th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -134,6 +136,9 @@ export default function IngredientiPage() {
                   <td>{ing.unita_misura}</td>
                   <td>{categoriaNome(ing.categoria_id)}</td>
                   <td>{ing.gelo ? "❄" : ""}</td>
+                  <td>
+                    <RicetteCoinvolteButton ingredienteId={ing.id} />
+                  </td>
                   <td className="row-actions">
                     <button onClick={() => modifica(ing)}>Modifica</button>
                     <button className="danger" onClick={() => elimina(ing.id)}>
@@ -144,7 +149,7 @@ export default function IngredientiPage() {
               ))}
               {filtrati.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="muted">
+                  <td colSpan={6} className="muted">
                     Nessun ingrediente trovato.
                   </td>
                 </tr>
