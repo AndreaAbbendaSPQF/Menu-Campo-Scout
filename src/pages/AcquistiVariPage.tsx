@@ -82,6 +82,15 @@ export default function AcquistiVariPage() {
       <p className="muted">
         Roba che non c'entra col menù: bevande, detersivi, stoviglie. Confluisce nella lista della spesa.
       </p>
+      <div style={{ marginBottom: 16, maxWidth: 360 }}>
+        <IngredienteAutocomplete
+          ingredienti={ingredienti}
+          categorie={categorie}
+          onSelect={(ing) => aggiungi(ing.id)}
+          onIngredienteCreato={(ing) => setIngredienti((prev) => [...prev, ing])}
+          placeholder="+ aggiungi ingrediente..."
+        />
+      </div>
       <table className="data-table">
         <thead>
           <tr>
@@ -126,15 +135,6 @@ export default function AcquistiVariPage() {
           )}
         </tbody>
       </table>
-      <div style={{ marginTop: 16, maxWidth: 360 }}>
-        <IngredienteAutocomplete
-          ingredienti={ingredienti}
-          categorie={categorie}
-          onSelect={(ing) => aggiungi(ing.id)}
-          onIngredienteCreato={(ing) => setIngredienti((prev) => [...prev, ing])}
-          placeholder="+ aggiungi ingrediente..."
-        />
-      </div>
     </div>
   );
 }

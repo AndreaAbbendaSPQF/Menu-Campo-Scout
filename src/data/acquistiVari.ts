@@ -2,7 +2,7 @@ import { execute, select } from "../lib/db";
 import { AcquistoVario } from "../types/domain";
 
 export async function listAcquistiVari(campoId: number): Promise<AcquistoVario[]> {
-  return select<AcquistoVario>("SELECT * FROM acquisti_vari WHERE campo_id = ? ORDER BY id", [campoId]);
+  return select<AcquistoVario>("SELECT * FROM acquisti_vari WHERE campo_id = ? ORDER BY id DESC", [campoId]);
 }
 
 export async function aggiungiAcquistoVario(
