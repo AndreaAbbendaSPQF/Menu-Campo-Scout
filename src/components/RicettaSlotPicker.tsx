@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { normalizeForCompare } from "../lib/text";
 import { Ricetta } from "../types/domain";
+import Popover from "./Popover";
 
 interface Props {
   ricetteAssegnate: Ricetta[];
@@ -10,19 +11,9 @@ interface Props {
 }
 
 export default function RicettaSlotPicker({ ricetteAssegnate, ricetteCompatibili, onAssegna, onRimuovi }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const bottoneRef = useRef<HTMLButtonElement>(null);
   const [aperto, setAperto] = useState(false);
   const [ricerca, setRicerca] = useState("");
-
-  useEffect(() => {
-    function onDocumentMouseDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setAperto(false);
-      }
-    }
-    document.addEventListener("mousedown", onDocumentMouseDown);
-    return () => document.removeEventListener("mousedown", onDocumentMouseDown);
-  }, []);
 
   const assegnateIds = useMemo(() => new Set(ricetteAssegnate.map((r) => r.id)), [ricetteAssegnate]);
 
@@ -34,7 +25,7 @@ export default function RicettaSlotPicker({ ricetteAssegnate, ricetteCompatibili
   }, [ricerca, ricetteCompatibili, assegnateIds]);
 
   return (
-    <div className="slot-cell" ref={containerRef}>
+    <div className="slot-cell">
       {ricetteAssegnate.map((r) => (
         <div key={r.id} className="slot-ricetta-assegnata">
           <span>{r.nome}</span>
@@ -45,6 +36,7 @@ export default function RicettaSlotPicker({ ricetteAssegnate, ricetteCompatibili
       ))}
       <button
         type="button"
+        ref={bottoneRef}
         className="slot-button"
         onClick={() => {
           setAperto((v) => !v);
@@ -53,30 +45,28 @@ export default function RicettaSlotPicker({ ricetteAssegnate, ricetteCompatibili
       >
         + Aggiungi
       </button>
-      {aperto && (
-        <div className="slot-dropdown">
-          <input
-            autoFocus
-            className="search-input"
-            placeholder="Cerca ricetta..."
-            value={ricerca}
-            onChange={(e) => setRicerca(e.target.value)}
-          />
-          {risultati.map((r) => (
-            <div
-              key={r.id}
-              className="autocomplete-item"
-              onClick={() => {
-                onAssegna(r.id);
-                setRicerca("");
-              }}
-            >
-              {r.nome}
-            </div>
-          ))}
-          {risultati.length === 0 && <div className="autocomplete-item muted">Nessuna ricetta trovata</div>}
-        </div>
-      )}
+      <Popover aperto={aperto} onChiudi={() => setAperto(false)} ancoraRef={bottoneRef}>
+        <input
+          autoFocus
+          className="search-input"
+          placeholder="Cerca ricetta..."
+          value={ricerca}
+          onChange={(e) => setRicerca(e.target.value)}
+        />
+        {risultati.map((r) => (
+          <div
+            key={r.id}
+            className="autocomplete-item"
+            onClick={() => {
+              onAssegna(r.id);
+              setRicerca("");
+            }}
+          >
+            {r.nome}
+          </div>
+        ))}
+        {risultati.length === 0 && <div className="autocomplete-item muted">Nessuna ricetta trovata</div>}
+      </Popover>
     </div>
   );
 }

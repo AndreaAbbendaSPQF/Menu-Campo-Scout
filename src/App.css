@@ -309,6 +309,29 @@ button.danger:hover {
   overflow-y: auto;
 }
 
+/* Renderizzato via portal in document.body: non viene mai tagliato da overflow:hidden
+   di contenitori antenati (es. tabelle con angoli arrotondati). */
+.popover-portal {
+  z-index: 1000;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 220px;
+}
+
+.autocomplete-link {
+  cursor: pointer;
+  color: var(--color-primary);
+}
+
+.autocomplete-link:hover {
+  text-decoration: underline;
+  background: #eef1ec;
+}
+
 .autocomplete-item {
   padding: 8px 12px;
   cursor: pointer;

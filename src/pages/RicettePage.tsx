@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { listCategorie } from "../data/categorie";
 import { listIngredienti } from "../data/ingredienti";
 import {
@@ -57,6 +58,18 @@ export default function RicettePage() {
   useEffect(() => {
     ricaricaListe();
   }, []);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const apriRicettaId = (location.state as { apriRicettaId?: number } | null)?.apriRicettaId;
+    if (apriRicettaId) {
+      apriModifica(apriRicettaId);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const filtrate = useMemo(() => {
     if (!ricerca.trim()) return ricette;

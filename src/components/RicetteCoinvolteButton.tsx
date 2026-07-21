@@ -1,21 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { listRicetteCoinvolte, RicettaCoinvolta } from "../data/ingredienti";
+import Popover from "./Popover";
 
 export default function RicetteCoinvolteButton({ ingredienteId }: { ingredienteId: number }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const bottoneRef = useRef<HTMLButtonElement>(null);
+  const navigate = useNavigate();
   const [aperto, setAperto] = useState(false);
   const [caricamento, setCaricamento] = useState(false);
   const [ricette, setRicette] = useState<RicettaCoinvolta[] | null>(null);
-
-  useEffect(() => {
-    function onDocumentMouseDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setAperto(false);
-      }
-    }
-    document.addEventListener("mousedown", onDocumentMouseDown);
-    return () => document.removeEventListener("mousedown", onDocumentMouseDown);
-  }, []);
 
   async function toggle() {
     if (aperto) {
@@ -29,24 +22,28 @@ export default function RicetteCoinvolteButton({ ingredienteId }: { ingredienteI
     setCaricamento(false);
   }
 
+  function vaiAllaRicetta(id: number) {
+    setAperto(false);
+    navigate("/ricette", { state: { apriRicettaId: id } });
+  }
+
   return (
-    <div className="autocomplete" ref={containerRef} style={{ display: "inline-block" }}>
-      <button type="button" className="secondary" onClick={toggle}>
+    <>
+      <button type="button" ref={bottoneRef} className="secondary" onClick={toggle}>
         Ricette coinvolte
       </button>
-      {aperto && (
-        <div className="autocomplete-dropdown" style={{ minWidth: 220 }}>
-          {caricamento && <div className="autocomplete-item muted">Caricamento...</div>}
-          {!caricamento && ricette?.length === 0 && (
-            <div className="autocomplete-item muted">Nessuna ricetta usa questo ingrediente</div>
-          )}
-          {!caricamento && ricette?.map((r) => (
-            <div key={r.id} className="autocomplete-item">
+      <Popover aperto={aperto} onChiudi={() => setAperto(false)} ancoraRef={bottoneRef}>
+        {caricamento && <div className="autocomplete-item muted">Caricamento...</div>}
+        {!caricamento && ricette?.length === 0 && (
+          <div className="autocomplete-item muted">Nessuna ricetta usa questo ingrediente</div>
+        )}
+        {!caricamento &&
+          ricette?.map((r) => (
+            <div key={r.id} className="autocomplete-item autocomplete-link" onClick={() => vaiAllaRicetta(r.id)}>
               {r.nome}
             </div>
           ))}
-        </div>
-      )}
-    </div>
+      </Popover>
+    </>
   );
 }

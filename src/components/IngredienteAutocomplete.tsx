@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { normalizeForCompare } from "../lib/text";
 import { creaIngrediente, IngredienteDuplicatoError } from "../data/ingredienti";
 import { CategoriaMerceologica, Ingrediente, UNITA_MISURA, UnitaMisura } from "../types/domain";
+import Popover from "./Popover";
 
 interface Props {
   ingredienti: Ingrediente[];
@@ -18,7 +19,7 @@ export default function IngredienteAutocomplete({
   onIngredienteCreato,
   placeholder,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [testo, setTesto] = useState("");
   const [aperto, setAperto] = useState(false);
   const [creazioneAttiva, setCreazioneAttiva] = useState(false);
@@ -26,17 +27,6 @@ export default function IngredienteAutocomplete({
   const [nuovaCategoria, setNuovaCategoria] = useState<number | "">("");
   const [nuovoGelo, setNuovoGelo] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
-
-  useEffect(() => {
-    function onDocumentMouseDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setAperto(false);
-        setCreazioneAttiva(false);
-      }
-    }
-    document.addEventListener("mousedown", onDocumentMouseDown);
-    return () => document.removeEventListener("mousedown", onDocumentMouseDown);
-  }, []);
 
   const risultati = useMemo(() => {
     if (!testo.trim()) return [];
@@ -91,8 +81,9 @@ export default function IngredienteAutocomplete({
   }
 
   return (
-    <div className="autocomplete" ref={containerRef}>
+    <div className="autocomplete">
       <input
+        ref={inputRef}
         type="text"
         value={testo}
         placeholder={placeholder ?? "Cerca ingrediente..."}
@@ -103,55 +94,50 @@ export default function IngredienteAutocomplete({
         }}
         onFocus={() => setAperto(true)}
       />
-      {aperto && testo.trim() && (
-        <div className="autocomplete-dropdown">
-          {risultati.map((ing) => (
-            <div key={ing.id} className="autocomplete-item" onClick={() => selezionaIngrediente(ing)}>
-              {ing.nome} <span className="muted">({ing.unita_misura})</span>
-            </div>
-          ))}
-          {!matchEsatto && !creazioneAttiva && (
-            <div className="autocomplete-item autocomplete-create" onClick={apriCreazione}>
-              + Crea nuovo ingrediente "{testo.trim()}"
-            </div>
-          )}
-          {creazioneAttiva && (
-            <div className="autocomplete-create-form">
-              <label>
-                Unità di misura
-                <select value={nuovaUnita} onChange={(e) => setNuovaUnita(e.target.value as UnitaMisura)}>
-                  {UNITA_MISURA.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Categoria merceologica
-                <select
-                  value={nuovaCategoria}
-                  onChange={(e) => setNuovaCategoria(Number(e.target.value))}
-                >
-                  {categorie.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nome}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="checkbox-label">
-                <input type="checkbox" checked={nuovoGelo} onChange={(e) => setNuovoGelo(e.target.checked)} />
-                Surgelato (Gelo)
-              </label>
-              {errore && <div className="form-error">{errore}</div>}
-              <button type="button" onClick={confermaCreazione}>
-                Crea "{testo.trim()}"
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <Popover aperto={aperto && !!testo.trim()} onChiudi={() => setAperto(false)} ancoraRef={inputRef}>
+        {risultati.map((ing) => (
+          <div key={ing.id} className="autocomplete-item" onClick={() => selezionaIngrediente(ing)}>
+            {ing.nome} <span className="muted">({ing.unita_misura})</span>
+          </div>
+        ))}
+        {!matchEsatto && !creazioneAttiva && (
+          <div className="autocomplete-item autocomplete-create" onClick={apriCreazione}>
+            + Crea nuovo ingrediente "{testo.trim()}"
+          </div>
+        )}
+        {creazioneAttiva && (
+          <div className="autocomplete-create-form">
+            <label>
+              Unità di misura
+              <select value={nuovaUnita} onChange={(e) => setNuovaUnita(e.target.value as UnitaMisura)}>
+                {UNITA_MISURA.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Categoria merceologica
+              <select value={nuovaCategoria} onChange={(e) => setNuovaCategoria(Number(e.target.value))}>
+                {categorie.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="checkbox-label">
+              <input type="checkbox" checked={nuovoGelo} onChange={(e) => setNuovoGelo(e.target.checked)} />
+              Surgelato (Gelo)
+            </label>
+            {errore && <div className="form-error">{errore}</div>}
+            <button type="button" onClick={confermaCreazione}>
+              Crea "{testo.trim()}"
+            </button>
+          </div>
+        )}
+      </Popover>
     </div>
   );
 }
