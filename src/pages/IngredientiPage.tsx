@@ -5,6 +5,7 @@ import {
   eliminaIngrediente,
   IngredienteDuplicatoError,
   listIngredienti,
+  UnitaMisuraIncompatibileError,
 } from "../data/ingredienti";
 import { listCategorie } from "../data/categorie";
 import { normalizeForCompare } from "../lib/text";
@@ -91,7 +92,11 @@ export default function IngredientiPage() {
       await ricarica();
       notificaSalvato();
     } catch (e) {
-      setErrore(e instanceof IngredienteDuplicatoError ? e.message : "Errore durante il salvataggio");
+      if (e instanceof IngredienteDuplicatoError || e instanceof UnitaMisuraIncompatibileError) {
+        setErrore(e.message);
+      } else {
+        setErrore("Errore durante il salvataggio");
+      }
     }
   }
 

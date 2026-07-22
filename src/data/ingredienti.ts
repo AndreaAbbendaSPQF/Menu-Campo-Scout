@@ -1,5 +1,6 @@
 import { execute, select } from "../lib/db";
 import { normalizeForCompare } from "../lib/text";
+import { fattoreConversione, unitaCompatibili } from "../lib/unitaMisura";
 import { Ingrediente, UnitaMisura } from "../types/domain";
 
 export async function listIngredienti(): Promise<Ingrediente[]> {
@@ -47,9 +48,35 @@ export async function creaIngrediente(input: NuovoIngrediente): Promise<number> 
   return result.lastInsertId;
 }
 
+export class UnitaMisuraIncompatibileError extends Error {
+  constructor(numRicette: number) {
+    super(
+      `Questo ingrediente è già usato in ${numRicette} ricetta/e con un'unità di misura non compatibile con quella selezionata. Le quantità non possono essere riscalate automaticamente.`
+    );
+  }
+}
+
 export async function aggiornaIngrediente(id: number, input: NuovoIngrediente): Promise<void> {
   const esistente = await findIngredienteByName(input.nome);
   if (esistente && esistente.id !== id) throw new IngredienteDuplicatoError(esistente.nome);
+
+  const attuale = await select<Ingrediente>("SELECT * FROM ingredienti WHERE id = ?", [id]);
+  const unitaAttuale = attuale[0]?.unita_misura;
+  const cambioUnita = unitaAttuale && unitaAttuale !== input.unita_misura;
+
+  let fattore: number | null = null;
+  if (cambioUnita) {
+    const usiRicette = await select<{ n: number }>(
+      "SELECT COUNT(*) as n FROM ricetta_ingredienti WHERE ingrediente_id = ?",
+      [id]
+    );
+    if (usiRicette[0].n > 0) {
+      if (!unitaCompatibili(unitaAttuale, input.unita_misura)) {
+        throw new UnitaMisuraIncompatibileError(usiRicette[0].n);
+      }
+      fattore = fattoreConversione(unitaAttuale, input.unita_misura);
+    }
+  }
 
   await execute(
     `UPDATE ingredienti
@@ -65,6 +92,13 @@ export async function aggiornaIngrediente(id: number, input: NuovoIngrediente): 
       id,
     ]
   );
+
+  if (fattore !== null && fattore !== 1) {
+    await execute("UPDATE ricetta_ingredienti SET quantita_per_5 = quantita_per_5 * ? WHERE ingrediente_id = ?", [
+      fattore,
+      id,
+    ]);
+  }
 }
 
 export interface UsoIngrediente {
