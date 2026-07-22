@@ -11,12 +11,17 @@ function normalizzaBase(s: string): string {
 }
 
 export async function datiCompletamenteVuoti(): Promise<boolean> {
-  const [ingredienti, ricette, campi] = await Promise.all([
-    select<{ n: number }>("SELECT COUNT(*) as n FROM ingredienti"),
-    select<{ n: number }>("SELECT COUNT(*) as n FROM ricette"),
-    select<{ n: number }>("SELECT COUNT(*) as n FROM campi"),
-  ]);
-  return ingredienti[0].n === 0 && ricette[0].n === 0 && campi[0].n === 0;
+  try {
+    const [ingredienti, ricette, campi] = await Promise.all([
+      select<{ n: number }>("SELECT COUNT(*) as n FROM ingredienti"),
+      select<{ n: number }>("SELECT COUNT(*) as n FROM ricette"),
+      select<{ n: number }>("SELECT COUNT(*) as n FROM campi"),
+    ]);
+    return ingredienti[0].n === 0 && ricette[0].n === 0 && campi[0].n === 0;
+  } catch (e) {
+    console.error("Verifica dati vuoti fallita, non inserisco dati di esempio", e);
+    return false;
+  }
 }
 
 export async function esisteCampoEsempio(): Promise<boolean> {

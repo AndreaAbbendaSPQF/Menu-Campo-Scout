@@ -25,19 +25,28 @@ export function CampoProvider({ children }: { children: ReactNode }) {
   const [caricato, setCaricato] = useState(false);
 
   async function ricaricaCampi() {
-    const lista = await listCampi();
-    setCampi(lista);
-    setCaricato(true);
-    setCampoAttivoIdState((current) => {
-      if (current !== null && lista.some((c) => c.id === current)) return current;
-      return lista[0]?.id ?? null;
-    });
+    try {
+      const lista = await listCampi();
+      setCampi(lista);
+      setCampoAttivoIdState((current) => {
+        if (current !== null && lista.some((c) => c.id === current)) return current;
+        return lista[0]?.id ?? null;
+      });
+    } catch (e) {
+      console.error("Caricamento campi fallito", e);
+    } finally {
+      setCaricato(true);
+    }
   }
 
   useEffect(() => {
     (async () => {
-      if (await datiCompletamenteVuoti()) {
-        await inserisciDatiEsempio();
+      try {
+        if (await datiCompletamenteVuoti()) {
+          await inserisciDatiEsempio();
+        }
+      } catch (e) {
+        console.error("Inizializzazione dati di esempio fallita", e);
       }
       await ricaricaCampi();
     })();

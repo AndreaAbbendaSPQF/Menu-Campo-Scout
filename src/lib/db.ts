@@ -4,7 +4,10 @@ let dbPromise: Promise<Database> | null = null;
 
 export function getDb(): Promise<Database> {
   if (!dbPromise) {
-    dbPromise = Database.load("sqlite:cambusascout.db");
+    dbPromise = Database.load("sqlite:cambusascout.db").catch((e) => {
+      dbPromise = null;
+      throw e;
+    });
   }
   return dbPromise;
 }
