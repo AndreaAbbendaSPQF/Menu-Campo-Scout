@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { listCampi } from "../data/campi";
-import { datiCompletamenteVuoti, inserisciDatiEsempio } from "../data/seed";
 import { Campo } from "../types/domain";
 
 const STORAGE_KEY = "cambusascout.campoAttivoId";
@@ -40,16 +39,7 @@ export function CampoProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (await datiCompletamenteVuoti()) {
-          await inserisciDatiEsempio();
-        }
-      } catch (e) {
-        console.error("Inizializzazione dati di esempio fallita", e);
-      }
-      await ricaricaCampi();
-    })();
+    ricaricaCampi();
   }, []);
 
   function setCampoAttivoId(id: number | null) {

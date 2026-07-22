@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { esportaBackup, importaBackup, scegliFileBackup } from "../data/backup";
-import { esisteCampoEsempio, svuotaDatiEsempio } from "../data/seed";
+import { datiCompletamenteVuoti, esisteCampoEsempio, inserisciDatiEsempio, svuotaDatiEsempio } from "../data/seed";
 import { useCampo } from "../context/CampoContext";
 
 export default function BackupPage() {
@@ -10,10 +10,29 @@ export default function BackupPage() {
   const [errore, setErrore] = useState<string | null>(null);
   const [inCorso, setInCorso] = useState(false);
   const [haDatiEsempio, setHaDatiEsempio] = useState(false);
+  const [dbVuoto, setDbVuoto] = useState(false);
 
   useEffect(() => {
     esisteCampoEsempio().then(setHaDatiEsempio);
+    datiCompletamenteVuoti().then(setDbVuoto);
   }, []);
+
+  async function caricaEsempio() {
+    setMessaggio(null);
+    setErrore(null);
+    setInCorso(true);
+    try {
+      await inserisciDatiEsempio();
+      await ricaricaCampi();
+      setHaDatiEsempio(true);
+      setDbVuoto(false);
+      setMessaggio("Dati di esempio caricati.");
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : "Errore durante il caricamento dei dati di esempio");
+    } finally {
+      setInCorso(false);
+    }
+  }
 
   async function esporta() {
     setMessaggio(null);
@@ -91,6 +110,19 @@ export default function BackupPage() {
         {messaggio && <div style={{ color: "var(--color-primary)", fontSize: 13 }}>{messaggio}</div>}
         {errore && <div className="form-error">{errore}</div>}
       </div>
+
+      {dbVuoto && !haDatiEsempio && (
+        <div className="form-panel" style={{ maxWidth: 480, marginTop: 20 }}>
+          <h2>Nessun dato presente</h2>
+          <p className="muted">
+            Il database è vuoto. Puoi importare un backup qui sopra, oppure caricare qualche dato di esempio per
+            vedere come funziona l'app.
+          </p>
+          <button className="secondary" onClick={caricaEsempio} disabled={inCorso}>
+            Carica dati di esempio
+          </button>
+        </div>
+      )}
 
       {haDatiEsempio && (
         <div className="form-panel" style={{ maxWidth: 480, marginTop: 20 }}>
