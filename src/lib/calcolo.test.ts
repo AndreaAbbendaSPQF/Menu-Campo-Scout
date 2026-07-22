@@ -8,6 +8,7 @@ import {
   CampoCoefficienti,
   GiornoCalc,
   PastoCalc,
+  raggruppaPerRicetta,
   RicetteMap,
   ServizioCalc,
 } from "./calcolo";
@@ -176,5 +177,38 @@ describe("aggregaTotaliPerIngrediente", () => {
     expect(totali.get(1)).toBe(8);
     expect(totali.get(2)).toBe(3);
     expect(totali.get(3)).toBe(7);
+  });
+});
+
+describe("raggruppaPerRicetta", () => {
+  it("somma le quantità dello stesso ingrediente per ricetta, ignorando le altre", () => {
+    const grammature = [
+      { ingredienteId: 1, ricettaId: 10, ricettaNome: "Pasta al sugo", quantita: 3 },
+      { ingredienteId: 1, ricettaId: 11, ricettaNome: "Pasta al pesto", quantita: 4 },
+      { ingredienteId: 1, ricettaId: 10, ricettaNome: "Pasta al sugo", quantita: 1 },
+      { ingredienteId: 2, ricettaId: 12, ricettaNome: "Altra ricetta", quantita: 100 },
+    ];
+
+    const risultato = raggruppaPerRicetta(grammature, 1);
+
+    expect(risultato).toHaveLength(2);
+    const sugo = risultato.find((r) => r.ricettaId === 10)!;
+    const pesto = risultato.find((r) => r.ricettaId === 11)!;
+    expect(sugo.quantita).toBe(4);
+    expect(pesto.quantita).toBe(4);
+  });
+
+  it("ordina per nome ricetta", () => {
+    const grammature = [
+      { ingredienteId: 1, ricettaId: 1, ricettaNome: "Zucchine saltate", quantita: 1 },
+      { ingredienteId: 1, ricettaId: 2, ricettaNome: "American lurido", quantita: 1 },
+    ];
+    const risultato = raggruppaPerRicetta(grammature, 1);
+    expect(risultato.map((r) => r.ricettaNome)).toEqual(["American lurido", "Zucchine saltate"]);
+  });
+
+  it("restituisce un array vuoto se l'ingrediente non è usato in nessuna ricetta", () => {
+    const grammature = [{ ingredienteId: 2, ricettaId: 1, ricettaNome: "X", quantita: 1 }];
+    expect(raggruppaPerRicetta(grammature, 1)).toEqual([]);
   });
 });

@@ -150,3 +150,26 @@ export function calcolaDaComprare(totale: number, magazzino: number, considerare
   if (!considerareMagazzino) return totale;
   return Math.max(0, totale - magazzino);
 }
+
+export interface RigaImpiegoRicetta {
+  ricettaId: number;
+  ricettaNome: string;
+  quantita: number;
+}
+
+export function raggruppaPerRicetta(
+  grammature: Pick<RigaGrammatura, "ingredienteId" | "ricettaId" | "ricettaNome" | "quantita">[],
+  ingredienteId: number
+): RigaImpiegoRicetta[] {
+  const totali = new Map<number, RigaImpiegoRicetta>();
+  for (const r of grammature) {
+    if (r.ingredienteId !== ingredienteId) continue;
+    const esistente = totali.get(r.ricettaId);
+    if (esistente) {
+      esistente.quantita += r.quantita;
+    } else {
+      totali.set(r.ricettaId, { ricettaId: r.ricettaId, ricettaNome: r.ricettaNome, quantita: r.quantita });
+    }
+  }
+  return Array.from(totali.values()).sort((a, b) => a.ricettaNome.localeCompare(b.ricettaNome, "it"));
+}

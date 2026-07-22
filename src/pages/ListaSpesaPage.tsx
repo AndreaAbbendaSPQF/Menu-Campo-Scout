@@ -3,9 +3,16 @@ import { useCampo } from "../context/CampoContext";
 import { useSaveFeedback } from "../context/SaveFeedbackContext";
 import { caricaDatiCalcolo, DatiCalcolo } from "../data/calcoloDati";
 import { impostaNotaListaSpesa } from "../data/listaSpesaNote";
-import { aggregaTotaliPerIngrediente, calcolaDaComprare, calcolaGrammature } from "../lib/calcolo";
+import {
+  aggregaTotaliPerIngrediente,
+  calcolaDaComprare,
+  calcolaGrammature,
+  raggruppaPerRicetta,
+  RigaImpiegoRicetta,
+} from "../lib/calcolo";
 import { formattaQuantita } from "../lib/numero";
 import { esportaListaSpesaExcel } from "../lib/exportExcel";
+import ImpiegoIngredienteButton from "../components/ImpiegoIngredienteButton";
 
 interface RigaListaSpesa {
   ingredienteId: number;
@@ -46,9 +53,23 @@ export default function ListaSpesaPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campoAttivoId, campoAttivo?.coeff_lc, campoAttivo?.coeff_sg, campoAttivo?.coeff_cambusa]);
 
+  const grammature = useMemo(() => {
+    if (!dati) return [];
+    return calcolaGrammature(dati.giorni, dati.pasti, dati.servizi, dati.ricette, dati.coefficienti);
+  }, [dati]);
+
+  const impiegoPerIngrediente = useMemo(() => {
+    const mappa = new Map<number, RigaImpiegoRicetta[]>();
+    for (const r of grammature) {
+      if (!mappa.has(r.ingredienteId)) {
+        mappa.set(r.ingredienteId, raggruppaPerRicetta(grammature, r.ingredienteId));
+      }
+    }
+    return mappa;
+  }, [grammature]);
+
   const righe = useMemo<RigaListaSpesa[]>(() => {
     if (!dati || !campoAttivo) return [];
-    const grammature = calcolaGrammature(dati.giorni, dati.pasti, dati.servizi, dati.ricette, dati.coefficienti);
     const totali = aggregaTotaliPerIngrediente(grammature, dati.serate, dati.acquistiVari);
     const considerareMagazzino = !!campoAttivo.considera_magazzino;
 
@@ -73,7 +94,7 @@ export default function ListaSpesaPage() {
     }
     risultato.sort((a, b) => a.categoriaOrdine - b.categoriaOrdine || a.nome.localeCompare(b.nome, "it"));
     return risultato;
-  }, [dati, campoAttivo]);
+  }, [dati, campoAttivo, grammature]);
 
   async function salvaNota(ingredienteId: number, nota: string) {
     if (campoAttivoId === null) return;
@@ -134,6 +155,7 @@ export default function ListaSpesaPage() {
             <th>Totale</th>
             <th>Magazzino</th>
             <th>Da comprare</th>
+            <th></th>
             <th>Note</th>
           </tr>
         </thead>
@@ -152,6 +174,12 @@ export default function ListaSpesaPage() {
                   <strong>{formattaQuantita(r.daComprare)}</strong>
                 </td>
                 <td>
+                  <ImpiegoIngredienteButton
+                    impiego={impiegoPerIngrediente.get(r.ingredienteId) ?? []}
+                    unitaMisura={r.unitaMisura}
+                  />
+                </td>
+                <td>
                   <input
                     className="lista-spesa-nota-input"
                     defaultValue={r.nota}
@@ -163,7 +191,7 @@ export default function ListaSpesaPage() {
           })}
           {righe.length === 0 && (
             <tr>
-              <td colSpan={7} className="muted">
+              <td colSpan={8} className="muted">
                 Nessun ingrediente nel campo: componi il menù o aggiungi serate/acquisti vari.
               </td>
             </tr>
